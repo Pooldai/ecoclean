@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { DB } from '../db';
 import { WasteReport, User, ReportStatus } from '../types';
-import { MapPin, CheckCircle, Camera, Navigation, AlertCircle, Info, ChevronRight, X, Scale } from 'lucide-react';
+import { MapPin, CheckCircle, Camera, Navigation, AlertCircle, ChevronRight, X, Scale } from 'lucide-react';
 
 const PickerDashboard: React.FC<{ user: User }> = ({ user }) => {
   const [tasks, setTasks] = useState<WasteReport[]>([]);
@@ -75,7 +75,7 @@ const PickerDashboard: React.FC<{ user: User }> = ({ user }) => {
                 </div>
                 <div className="flex-grow">
                   <div className="flex justify-between items-start mb-2">
-                    <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full uppercase">High Priority</span>
+                    <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full uppercase">Priority: High</span>
                     <span className="text-[10px] text-slate-400">ID: {task.id.slice(-6)}</span>
                   </div>
                   <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2">
@@ -84,13 +84,6 @@ const PickerDashboard: React.FC<{ user: User }> = ({ user }) => {
                   </h3>
                   <p className="text-sm text-slate-600 mt-1 line-clamp-2">{task.description}</p>
                   
-                  {task.aiAnalysis && (
-                    <div className="mt-2 text-xs text-slate-500 italic flex items-center gap-1">
-                      <Info size={12} />
-                      AI Prediction: {task.aiAnalysis}
-                    </div>
-                  )}
-
                   <div className="mt-4 flex flex-wrap gap-2">
                     <button 
                       onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(task.location.address)}`, '_blank')}
@@ -216,10 +209,6 @@ const PickerDashboard: React.FC<{ user: User }> = ({ user }) => {
                       >
                         <X size={18} />
                       </button>
-                      <div className="absolute bottom-0 left-0 right-0 bg-emerald-600/90 text-white py-2 px-4 text-xs font-bold flex items-center justify-center gap-2">
-                        <CheckCircle size={14} />
-                        Proof Ready for Verification
-                      </div>
                     </div>
                   )}
                 </div>

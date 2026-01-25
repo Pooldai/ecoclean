@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { DB } from '../db';
 import { WasteReport, User, ReportStatus, Feedback } from '../types';
-import { analyzeWasteImage } from '../geminiService';
 import { 
   Camera, MapPin, List, PlusCircle, AlertCircle, 
   CheckCircle2, Star, Send, X, Image as ImageIcon, Trophy, Clock
@@ -16,8 +15,6 @@ const CitizenDashboard: React.FC<{ user: User }> = ({ user }) => {
     photo: '',
     address: ''
   });
-  const [analyzing, setAnalyzing] = useState(false);
-  const [aiAnalysis, setAiAnalysis] = useState('');
   const [selectedFeedbackReport, setSelectedFeedbackReport] = useState<WasteReport | null>(null);
   const [feedback, setFeedback] = useState({ rating: 5, comment: '', isCleaned: true });
 
@@ -33,14 +30,9 @@ const CitizenDashboard: React.FC<{ user: User }> = ({ user }) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = async () => {
+      reader.onloadend = () => {
         const base64 = reader.result as string;
         setNewReport({ ...newReport, photo: base64 });
-        
-        setAnalyzing(true);
-        const analysis = await analyzeWasteImage(base64);
-        setAiAnalysis(analysis);
-        setAnalyzing(false);
       };
       reader.readAsDataURL(file);
     }
@@ -59,7 +51,6 @@ const CitizenDashboard: React.FC<{ user: User }> = ({ user }) => {
         address: newReport.address
       },
       status: ReportStatus.PENDING,
-      aiAnalysis: aiAnalysis,
       createdAt: Date.now()
     };
 
@@ -67,7 +58,6 @@ const CitizenDashboard: React.FC<{ user: User }> = ({ user }) => {
     setReports([report, ...reports]);
     setIsReporting(false);
     setNewReport({ description: '', photo: '', address: '' });
-    setAiAnalysis('');
   };
 
   const handleSubmitFeedback = (e: React.FormEvent) => {
@@ -87,7 +77,6 @@ const CitizenDashboard: React.FC<{ user: User }> = ({ user }) => {
 
     DB.saveFeedback(fb);
 
-    // If area not cleaned, flag for admin reassignment
     if (!feedback.isCleaned) {
       const updatedReport = { ...selectedFeedbackReport, needsReassignment: true };
       DB.updateReport(updatedReport);
@@ -155,12 +144,6 @@ const CitizenDashboard: React.FC<{ user: User }> = ({ user }) => {
                     <p className="font-semibold text-slate-800 line-clamp-1">{report.location.address}</p>
                     <p className="text-sm text-slate-600 mt-2 line-clamp-2">{report.description}</p>
                     
-                    {report.aiAnalysis && (
-                      <div className="mt-3 p-2 bg-emerald-50 rounded text-xs text-emerald-800 border border-emerald-100">
-                        <strong>AI Insight:</strong> {report.aiAnalysis}
-                      </div>
-                    )}
-
                     {report.status === ReportStatus.COMPLETED && !report.needsReassignment && (
                       <button 
                         onClick={() => setSelectedFeedbackReport(report)}
@@ -256,26 +239,14 @@ const CitizenDashboard: React.FC<{ user: User }> = ({ user }) => {
                     <img src={newReport.photo} alt="Preview" className="w-full h-full object-cover" />
                     <button 
                       type="button" 
-                      onClick={() => {setNewReport({...newReport, photo: ''}); setAiAnalysis('');}}
+                      onClick={() => {setNewReport({...newReport, photo: ''});}}
                       className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                     >
                       <X size={16} />
                     </button>
-                    {analyzing && (
-                      <div className="absolute inset-0 bg-emerald-900/40 backdrop-blur-[2px] flex flex-col items-center justify-center text-white text-sm">
-                        <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin mb-2"></div>
-                        AI Analyzing waste...
-                      </div>
-                    )}
                   </div>
                 )}
               </div>
-
-              {aiAnalysis && (
-                <div className="p-3 bg-emerald-50 rounded-lg text-xs text-emerald-700 border border-emerald-100 animate-pulse">
-                  <strong>AI Analysis Result:</strong> {aiAnalysis}
-                </div>
-              )}
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Location Address</label>
@@ -304,7 +275,7 @@ const CitizenDashboard: React.FC<{ user: User }> = ({ user }) => {
 
               <button
                 type="submit"
-                disabled={!newReport.photo || analyzing}
+                disabled={!newReport.photo}
                 className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors mt-4 shadow-lg shadow-emerald-200"
               >
                 <Send size={20} />

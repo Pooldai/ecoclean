@@ -34,7 +34,6 @@ export interface WasteReport {
   };
   description: string;
   status: ReportStatus;
-  aiAnalysis?: string;
   createdAt: number;
   assignedPickerId?: string;
   assignedPickerName?: string;
