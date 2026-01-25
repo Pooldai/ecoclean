@@ -1,11 +1,16 @@
-
 import { GoogleGenAI } from "@google/genai";
 
-// Always initialize GoogleGenAI with the process.env.API_KEY directly.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// The API key is injected via Vite's define config from the Cloudflare environment variable
+const apiKey = process.env.API_KEY || "";
 
 export const analyzeWasteImage = async (base64Image: string): Promise<string> => {
+  if (!apiKey) {
+    console.warn("Gemini API key is missing. Analysis will not work.");
+    return "API Key missing. Please configure environment variables.";
+  }
+
   try {
+    const ai = new GoogleGenAI({ apiKey });
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: {
@@ -22,10 +27,10 @@ export const analyzeWasteImage = async (base64Image: string): Promise<string> =>
         ]
       }
     });
-    // Use the .text property to access the generated text content.
+    
     return response.text || "No analysis available.";
   } catch (error) {
     console.error("Gemini analysis error:", error);
-    return "Analysis failed.";
+    return "Analysis failed. Please check your API key and network connection.";
   }
 };

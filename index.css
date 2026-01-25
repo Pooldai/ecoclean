@@ -1,7 +1,16 @@
-/* Standard Tailwind directives are handled by CDN in index.html for this environment */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 body {
   font-family: 'Inter', sans-serif;
   margin: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom transitions for a premium feel */
+.transition-all {
+  transition-duration: 200ms;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
