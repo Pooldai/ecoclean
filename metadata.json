@@ -1,0 +1,8 @@
+{
+  "name": "EcoClean Waste Management",
+  "description": "A comprehensive waste management platform connecting citizens, garbage pickers, and administrators to keep cities clean using real-time reporting and task assignment.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation"
+  ]
+}
