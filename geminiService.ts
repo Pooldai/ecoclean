@@ -1,11 +1,9 @@
 import { GoogleGenAI } from "@google/genai";
 
-// The API key is injected via Vite's define config from the Cloudflare environment variable
-const apiKey = process.env.API_KEY || "";
-
 export const analyzeWasteImage = async (base64Image: string): Promise<string> => {
+  const apiKey = process.env.API_KEY;
   if (!apiKey) {
-    console.warn("Gemini API key is missing. Analysis will not work.");
+    console.warn("Gemini API key is missing.");
     return "API Key missing. Please configure environment variables.";
   }
 
