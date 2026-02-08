@@ -12,49 +12,40 @@ Before you begin, ensure you have the following installed:
 
 ## 🚀 Quick Start Instructions
 
-### Step 1: Extract the Project
-Unzip the project folder to a location on your computer (e.g., your Desktop).
+### Step 1: Open Terminal
+Open your terminal (Command Prompt or PowerShell on Windows).
 
-### Step 2: Open Terminal/Command Prompt
-1. Open your computer's terminal (Command Prompt on Windows, Terminal on Mac).
-2. Type `cd` followed by a space, then drag the project folder into the terminal window.
-3. Press **Enter**.
+### Step 2: Navigate to the Project
+You must be in the folder that contains the `package.json` file. 
+Run this command:
+```bash
+cd ecoclean-main
+```
+*Note: If you are already inside the folder, you can skip this step.*
 
 ### Step 3: Install Dependencies
-Copy and paste the following command and press **Enter**:
+Run:
 ```bash
 npm install
 ```
-*Wait for the process to finish. It will download all necessary libraries.*
 
-### Step 4: Configure the AI (Optional but Recommended)
-To enable the AI Image Analysis features:
-1. Create a new file in the folder named `.env`
-2. Open it with Notepad or any text editor.
-3. Paste the following line:
-   `API_KEY=YOUR_GEMINI_API_KEY_HERE`
-   *(Replace the text after the `=` with your actual key from [Google AI Studio](https://aistudio.google.com/app/apikey))*
+### Step 4: Configure the AI
+1. Create a file named `.env` in the project folder.
+2. Add your API key: `API_KEY=your_key_here`
 
 ### Step 5: Start the Application
-Run this final command:
+Run:
 ```bash
 npm run dev
 ```
 
 ---
 
-## 🌐 Accessing the App
-Once the command finishes, your browser should open automatically to:
-**http://localhost:3000**
+## 🛠️ Troubleshooting "ENOENT" Error
+If you see an error saying `ENOENT: no such file or directory, open 'package.json'`, it means your terminal is in the wrong folder. 
 
-### Default Login for Testing:
-- **Email**: `admin@ecoclean.com`
-- **Password**: `admin` (or any text, as it is a demo account)
-
-## 🛠️ Troubleshooting
-- **Command not found**: Ensure Node.js is installed correctly.
-- **Port 3000 in use**: The app will automatically try another port (like 3001). Check the terminal output for the correct link.
-- **AI Analysis failing**: Ensure your API key in the `.env` file is valid and has no spaces around it.
+**The Solution:**
+Type `ls` (on Mac/Linux) or `dir` (on Windows). If you see a folder named `ecoclean-main` in the list, type `cd ecoclean-main` and then try `npm install` again.
 
 ---
 *Developed for EcoClean Waste Management Solutions.*
