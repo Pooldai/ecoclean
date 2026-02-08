@@ -1,14 +1,14 @@
 import { GoogleGenAI } from "@google/genai";
 
+/**
+ * Analyzes an image of waste using Gemini 3 Flash to identify type and priority.
+ * Always initializes a new instance before use as per guidelines for reliable API key access.
+ */
 export const analyzeWasteImage = async (base64Image: string): Promise<string> => {
-  const apiKey = process.env.API_KEY;
-  if (!apiKey) {
-    console.warn("Gemini API key is missing.");
-    return "API Key missing. Please configure environment variables.";
-  }
+  // Always use the named parameter and process.env.API_KEY directly as per guidelines
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   try {
-    const ai = new GoogleGenAI({ apiKey });
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: {
@@ -26,9 +26,10 @@ export const analyzeWasteImage = async (base64Image: string): Promise<string> =>
       }
     });
     
+    // Access the .text property directly (not a method) as per SDK requirements
     return response.text || "No analysis available.";
   } catch (error) {
     console.error("Gemini analysis error:", error);
-    return "Analysis failed. Please check your API key and network connection.";
+    return "Analysis failed. Please check your network connection.";
   }
 };

@@ -1,15 +1,16 @@
-
 import React, { useState, useEffect } from 'react';
 import { DB } from '../db';
 import { WasteReport, User, ReportStatus, Feedback } from '../types';
 import { 
   Camera, MapPin, List, PlusCircle, AlertCircle, 
-  CheckCircle2, Star, Send, X, Image as ImageIcon, Trophy, Clock
+  CheckCircle2, Star, Send, X, Image as ImageIcon, Trophy, Clock, Loader2
 } from 'lucide-react';
+import { analyzeWasteImage } from '../geminiService';
 
 const CitizenDashboard: React.FC<{ user: User }> = ({ user }) => {
   const [reports, setReports] = useState<WasteReport[]>([]);
   const [isReporting, setIsReporting] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [newReport, setNewReport] = useState({
     description: '',
     photo: '',
@@ -26,13 +27,30 @@ const CitizenDashboard: React.FC<{ user: User }> = ({ user }) => {
   const completedCount = reports.filter(r => r.status === ReportStatus.COMPLETED).length;
   const rewardPoints = completedCount * 10;
 
+  // Handle image upload and trigger Gemini analysis
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => {
+      reader.onloadend = async () => {
         const base64 = reader.result as string;
         setNewReport({ ...newReport, photo: base64 });
+        
+        // Auto-analyze the uploaded image with Gemini
+        setIsAnalyzing(true);
+        try {
+          const analysis = await analyzeWasteImage(base64);
+          setNewReport(prev => ({ 
+            ...prev, 
+            description: prev.description 
+              ? `${prev.description}\n\n[AI Analysis]: ${analysis}` 
+              : `[AI Analysis]: ${analysis}` 
+          }));
+        } catch (err) {
+          console.error("Image analysis failed:", err);
+        } finally {
+          setIsAnalyzing(false);
+        }
       };
       reader.readAsDataURL(file);
     }
@@ -237,6 +255,12 @@ const CitizenDashboard: React.FC<{ user: User }> = ({ user }) => {
                 ) : (
                   <div className="relative rounded-xl overflow-hidden h-48 group">
                     <img src={newReport.photo} alt="Preview" className="w-full h-full object-cover" />
+                    {isAnalyzing && (
+                      <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center text-white text-sm font-bold backdrop-blur-[2px]">
+                        <Loader2 className="animate-spin mb-2" size={24} />
+                        Gemini is analyzing waste...
+                      </div>
+                    )}
                     <button 
                       type="button" 
                       onClick={() => {setNewReport({...newReport, photo: ''});}}
@@ -264,7 +288,7 @@ const CitizenDashboard: React.FC<{ user: User }> = ({ user }) => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Description (Optional)</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
                 <textarea
                   className="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none h-24 resize-none"
                   placeholder="Tell us more about the situation..."
@@ -275,11 +299,11 @@ const CitizenDashboard: React.FC<{ user: User }> = ({ user }) => {
 
               <button
                 type="submit"
-                disabled={!newReport.photo}
+                disabled={!newReport.photo || isAnalyzing}
                 className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2 transition-colors mt-4 shadow-lg shadow-emerald-200"
               >
                 <Send size={20} />
-                Submit Report
+                {isAnalyzing ? 'Analyzing Image...' : 'Submit Report'}
               </button>
             </form>
           </div>
