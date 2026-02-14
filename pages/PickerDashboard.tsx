@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { DB } from '../db';
 import { WasteReport, User, ReportStatus, Language, Theme } from '../types';
-import { MapPin, CheckCircle, Camera, Navigation, AlertCircle, ChevronRight, X, Scale } from 'lucide-react';
+import { MapPin, CheckCircle, Camera, Navigation, User as UserIcon, X, Mail, Phone, Save, CheckCircle2 } from 'lucide-react';
 import { useTranslation } from '../translations';
 
 const PickerDashboard: React.FC<{ user: User, lang: Language, theme: Theme }> = ({ user, lang, theme }) => {
@@ -10,6 +10,13 @@ const PickerDashboard: React.FC<{ user: User, lang: Language, theme: Theme }> = 
   const [isCompleting, setIsCompleting] = useState(false);
   const [proofImage, setProofImage] = useState('');
   const [weight, setWeight] = useState<number>(5);
+  const [activeTab, setActiveTab] = useState<'tasks' | 'profile'>('tasks');
+  const [profileData, setProfileData] = useState({
+    name: user.name,
+    email: user.email,
+    phone: user.phone || ''
+  });
+  const [updateSuccess, setUpdateSuccess] = useState(false);
   const t = useTranslation(lang);
 
   const weightOptions = Array.from({ length: 10 }, (_, i) => (i + 1) * 5);
@@ -39,6 +46,19 @@ const PickerDashboard: React.FC<{ user: User, lang: Language, theme: Theme }> = 
     setWeight(5);
   };
 
+  const handleUpdateProfile = (e: React.FormEvent) => {
+    e.preventDefault();
+    const updatedUser: User = {
+      ...user,
+      name: profileData.name,
+      email: profileData.email,
+      phone: profileData.phone
+    };
+    DB.updateUser(updatedUser);
+    setUpdateSuccess(true);
+    setTimeout(() => setUpdateSuccess(false), 3000);
+  };
+
   const handleProofFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -52,76 +72,164 @@ const PickerDashboard: React.FC<{ user: User, lang: Language, theme: Theme }> = 
 
   return (
     <div className={`max-w-7xl mx-auto px-4 py-8 ${theme === 'dark' ? 'text-white' : 'text-slate-900'}`}>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">{t.taskQueue}</h1>
-        <p className={theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}>{lang === 'EN' ? "Manage your assigned locations." : "अपने आवंटित स्थानों को प्रबंधित करें।"}</p>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div>
+          <h1 className="text-3xl font-bold">{activeTab === 'tasks' ? t.taskQueue : t.profile}</h1>
+          <p className={theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}>
+            {activeTab === 'tasks' 
+              ? (lang === 'EN' ? "Manage your assigned locations." : "अपने आवंटित स्थानों को प्रबंधित करें।")
+              : (lang === 'EN' ? "Manage your account details." : "अपने खाते का विवरण प्रबंधित करें।")}
+          </p>
+        </div>
+        <div className={`flex p-1 rounded-lg border shadow-sm ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+          <button 
+            onClick={() => setActiveTab('tasks')}
+            className={`px-4 py-2 rounded-md transition-all text-sm font-semibold flex items-center gap-2 ${activeTab === 'tasks' ? 'bg-emerald-600 text-white' : theme === 'dark' ? 'text-slate-400 hover:bg-slate-700' : 'text-slate-600 hover:bg-slate-50'}`}
+          >
+            <CheckCircle size={16} />
+            {lang === 'EN' ? 'Tasks' : 'कार्य'}
+          </button>
+          <button 
+            onClick={() => setActiveTab('profile')}
+            className={`px-4 py-2 rounded-md transition-all text-sm font-semibold flex items-center gap-2 ${activeTab === 'profile' ? 'bg-emerald-600 text-white' : theme === 'dark' ? 'text-slate-400 hover:bg-slate-700' : 'text-slate-600 hover:bg-slate-50'}`}
+          >
+            <UserIcon size={16} />
+            {t.profile}
+          </button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-4">
-          {tasks.length === 0 ? (
-            <div className={`rounded-2xl border p-12 text-center shadow-sm ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-slate-500' : 'bg-white border-slate-200 text-slate-400'}`}>
-              <CheckCircle size={48} className="mx-auto mb-4 text-emerald-500/20" />
-              <p className="text-lg font-medium">{lang === 'EN' ? "All caught up!" : "सब कुछ पूरा हो गया!"}</p>
-            </div>
-          ) : (
-            tasks.map(task => (
-              <div 
-                key={task.id} 
-                className={`rounded-xl shadow-sm border p-4 transition-all flex flex-col md:flex-row gap-4 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'} hover:border-emerald-500`}
-              >
-                <div className="w-full md:w-32 h-32 rounded-lg overflow-hidden shrink-0 border border-black/10">
-                  <img src={task.photoUrl} alt="Litter" className="w-full h-full object-cover" />
-                </div>
-                <div className="flex-grow">
-                  <h3 className="font-bold text-lg flex items-center gap-2">
-                    <MapPin size={18} className="text-slate-500" />
-                    {task.location.address}
-                  </h3>
-                  <p className={`text-sm mt-1 line-clamp-2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>{task.description}</p>
-                  
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    <button 
-                      onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(task.location.address)}`, '_blank')}
-                      className={`py-2 px-4 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-colors ${theme === 'dark' ? 'bg-slate-700 text-slate-100 hover:bg-slate-600' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
-                    >
-                      <Navigation size={16} />
-                      {t.navigate}
-                    </button>
-                    <button 
-                      onClick={() => {setSelectedTask(task); setIsCompleting(true);}}
-                      className="py-2 px-6 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-bold flex items-center justify-center gap-2"
-                    >
-                      <CheckCircle size={16} />
-                      {t.markComplete}
-                    </button>
+      {activeTab === 'tasks' ? (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-4">
+            {tasks.length === 0 ? (
+              <div className={`rounded-2xl border p-12 text-center shadow-sm ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-slate-500' : 'bg-white border-slate-200 text-slate-400'}`}>
+                <CheckCircle size={48} className="mx-auto mb-4 text-emerald-500/20" />
+                <p className="text-lg font-medium">{lang === 'EN' ? "All caught up!" : "सब कुछ पूरा हो गया!"}</p>
+              </div>
+            ) : (
+              tasks.map(task => (
+                <div 
+                  key={task.id} 
+                  className={`rounded-xl shadow-sm border p-4 transition-all flex flex-col md:flex-row gap-4 ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'} hover:border-emerald-500`}
+                >
+                  <div className="w-full md:w-32 h-32 rounded-lg overflow-hidden shrink-0 border border-black/10">
+                    <img src={task.photoUrl} alt="Litter" className="w-full h-full object-cover" />
+                  </div>
+                  <div className="flex-grow">
+                    <h3 className="font-bold text-lg flex items-center gap-2">
+                      <MapPin size={18} className="text-slate-500" />
+                      {task.location.address}
+                    </h3>
+                    <p className={`text-sm mt-1 line-clamp-2 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>{task.description}</p>
+                    
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <button 
+                        onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(task.location.address)}`, '_blank')}
+                        className={`py-2 px-4 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 transition-colors ${theme === 'dark' ? 'bg-slate-700 text-slate-100 hover:bg-slate-600' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
+                      >
+                        <Navigation size={16} />
+                        {t.navigate}
+                      </button>
+                      <button 
+                        onClick={() => {setSelectedTask(task); setIsCompleting(true);}}
+                        className="py-2 px-6 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-bold flex items-center justify-center gap-2"
+                      >
+                        <CheckCircle size={16} />
+                        {t.markComplete}
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))
-          )}
-        </div>
+              ))
+            )}
+          </div>
 
-        <div className="space-y-6">
-          <div className="bg-slate-800 rounded-2xl p-6 text-white shadow-xl">
-            <h3 className="font-bold text-xl mb-4">{lang === 'EN' ? "Performance" : "प्रदर्शन"}</h3>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center border-b border-white/10 pb-2">
-                <span className="text-slate-400 text-sm">{lang === 'EN' ? "Tasks Assigned" : "सौंपे गए कार्य"}</span>
-                <span className="font-bold">{tasks.length}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-slate-400 text-sm">{lang === 'EN' ? "Weight Collected" : "एकत्रित वजन"}</span>
-                <span className="font-bold text-emerald-400">
-                  {DB.getReports()
-                    .filter(r => r.assignedPickerId === user.id && r.status === ReportStatus.COMPLETED)
-                    .reduce((acc, curr) => acc + (curr.collectedWeight || 0), 0)} kg
-                </span>
+          <div className="space-y-6">
+            <div className="bg-slate-800 rounded-2xl p-6 text-white shadow-xl">
+              <h3 className="font-bold text-xl mb-4">{lang === 'EN' ? "Performance" : "प्रदर्शन"}</h3>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center border-b border-white/10 pb-2">
+                  <span className="text-slate-400 text-sm">{lang === 'EN' ? "Tasks Assigned" : "सौंपे गए कार्य"}</span>
+                  <span className="font-bold">{tasks.length}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-400 text-sm">{lang === 'EN' ? "Weight Collected" : "एकत्रित वजन"}</span>
+                  <span className="font-bold text-emerald-400">
+                    {DB.getReports()
+                      .filter(r => r.assignedPickerId === user.id && r.status === ReportStatus.COMPLETED)
+                      .reduce((acc, curr) => acc + (curr.collectedWeight || 0), 0)} kg
+                  </span>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      ) : (
+        <div className={`max-w-2xl mx-auto p-8 rounded-2xl border shadow-sm ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+          <div className="flex justify-center mb-8">
+            <div className="w-24 h-24 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center text-emerald-600">
+              <UserIcon size={48} />
+            </div>
+          </div>
+          
+          {updateSuccess && (
+            <div className="mb-6 p-4 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 rounded-xl flex items-center gap-3 animate-bounce">
+              <CheckCircle2 size={20} />
+              <span className="font-bold">{t.updateSuccess}</span>
+            </div>
+          )}
+
+          <form onSubmit={handleUpdateProfile} className="space-y-6">
+            <div>
+              <label className="block text-sm font-bold mb-2 flex items-center gap-2">
+                <UserIcon size={14} className="text-slate-400" />
+                {t.name}
+              </label>
+              <input
+                type="text"
+                required
+                className={`w-full p-3 border rounded-xl outline-none transition-all ${theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : 'bg-slate-50 border-slate-200'} focus:ring-2 focus:ring-emerald-500`}
+                value={profileData.name}
+                onChange={(e) => setProfileData({...profileData, name: e.target.value})}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold mb-2 flex items-center gap-2">
+                <Mail size={14} className="text-slate-400" />
+                {t.email}
+              </label>
+              <input
+                type="email"
+                required
+                className={`w-full p-3 border rounded-xl outline-none transition-all ${theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-slate-200'} focus:ring-2 focus:ring-emerald-500`}
+                value={profileData.email}
+                onChange={(e) => setProfileData({...profileData, email: e.target.value})}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold mb-2 flex items-center gap-2">
+                <Phone size={14} className="text-slate-400" />
+                {t.phone}
+              </label>
+              <input
+                type="tel"
+                className={`w-full p-3 border rounded-xl outline-none transition-all ${theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-slate-200'} focus:ring-2 focus:ring-emerald-500`}
+                value={profileData.phone}
+                onChange={(e) => setProfileData({...profileData, phone: e.target.value})}
+              />
+            </div>
+            
+            <button
+              type="submit"
+              className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg active:scale-95"
+            >
+              <Save size={20} />
+              {t.saveChanges}
+            </button>
+          </form>
+        </div>
+      )}
 
       {isCompleting && selectedTask && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4">

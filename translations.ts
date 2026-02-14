@@ -41,7 +41,15 @@ export const translations = {
     finalize: "Finalize Cleanup",
     uploadProof: "Upload Proof",
     confirm: "Confirm Completion",
-    copyright: "© 2026 EcoClean Waste Management Platform."
+    copyright: "© 2026 EcoClean Waste Management Platform.",
+    profile: "My Profile",
+    analytics: "Analytics",
+    saveChanges: "Save Changes",
+    updateSuccess: "Profile updated successfully!",
+    dailyTrends: "Daily Collection Trends",
+    collectionData: "Garbage Collection Data",
+    flagged: "Flagged",
+    flaggedHi: "चिह्नित"
   },
   HI: {
     appName: "इकोक्लीन",
@@ -83,7 +91,15 @@ export const translations = {
     finalize: "सफाई पूरी करें",
     uploadProof: "प्रमाण अपलोड करें",
     confirm: "पूर्णता की पुष्टि करें",
-    copyright: "© 2026 इकोक्लीन वेस्ट मैनेजमेंट प्लेटफॉर्म।"
+    copyright: "© 2026 इकोक्लीन वेस्ट मैनेजमेंट प्लेटफॉर्म।",
+    profile: "मेरी प्रोफ़ाइल",
+    analytics: "विश्लेषण",
+    saveChanges: "परिवर्तन सहेजें",
+    updateSuccess: "प्रोफ़ाइल सफलतापूर्वक अपडेट की गई!",
+    dailyTrends: "दैनिक संग्रहण रुझान",
+    collectionData: "कचरा संग्रहण डेटा",
+    flagged: "चिह्नित",
+    flaggedHi: "चिह्नित"
   }
 };
 

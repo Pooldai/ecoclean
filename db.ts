@@ -1,4 +1,3 @@
-
 import { User, WasteReport, UserRole, ReportStatus, Feedback } from './types';
 
 const STORAGE_KEYS = {
@@ -32,6 +31,21 @@ export const DB = {
     const users = DB.getUsers();
     users.push(user);
     localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+  },
+
+  updateUser: (updatedUser: User) => {
+    const users = DB.getUsers();
+    const index = users.findIndex(u => u.id === updatedUser.id);
+    if (index !== -1) {
+      users[index] = updatedUser;
+      localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+      
+      // Update session if it's the current user
+      const session = DB.getSession();
+      if (session && session.id === updatedUser.id) {
+        DB.setSession(updatedUser);
+      }
+    }
   },
 
   getReports: (): WasteReport[] => {

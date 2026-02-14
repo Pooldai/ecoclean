@@ -3,7 +3,7 @@ import { DB } from '../db';
 import { WasteReport, User, UserRole, ReportStatus, Feedback, Language, Theme } from '../types';
 import { 
   Users, AlertCircle, CheckCircle2, 
-  MapPin, Clock, Trash2, Filter, ChevronRight, Scale, RotateCcw, MessageSquare, Star, Briefcase, Eye
+  MapPin, Clock, Trash2, Scale, RotateCcw, MessageSquare, Star, Briefcase, BarChart3
 } from 'lucide-react';
 import { useTranslation } from '../translations';
 
@@ -12,7 +12,7 @@ const AdminDashboard: React.FC<{ user: User, lang: Language, theme: Theme }> = (
   const [pickers, setPickers] = useState<User[]>([]);
   const [citizens, setCitizens] = useState<User[]>([]);
   const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
-  const [activeTab, setActiveTab] = useState<'reports' | 'users' | 'feedback'>('reports');
+  const [activeTab, setActiveTab] = useState<'reports' | 'users' | 'feedback' | 'analytics'>('reports');
   const [viewingFeedback, setViewingFeedback] = useState<Feedback | null>(null);
   
   const t = useTranslation(lang);
@@ -76,6 +76,35 @@ const AdminDashboard: React.FC<{ user: User, lang: Language, theme: Theme }> = (
     totalWeight: reports.filter(r => r.status === ReportStatus.COMPLETED).reduce((sum, r) => sum + (r.collectedWeight || 0), 0)
   };
 
+  // Analytics helper: Group completed weight by date
+  const getDailyAnalytics = () => {
+    const dailyData: Record<string, number> = {};
+    const last7Days = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      return d.toISOString().split('T')[0];
+    }).reverse();
+
+    last7Days.forEach(date => dailyData[date] = 0);
+
+    reports.forEach(r => {
+      if (r.status === ReportStatus.COMPLETED && r.completedAt) {
+        const dateStr = new Date(r.completedAt).toISOString().split('T')[0];
+        if (dailyData[dateStr] !== undefined) {
+          dailyData[dateStr] += (r.collectedWeight || 0);
+        }
+      }
+    });
+
+    return Object.entries(dailyData).map(([date, weight]) => ({
+      date: date.slice(5), // MM-DD
+      weight
+    }));
+  };
+
+  const analyticsData = getDailyAnalytics();
+  const maxWeight = Math.max(...analyticsData.map(d => d.weight), 10);
+
   return (
     <div className={`max-w-7xl mx-auto px-4 py-8 ${theme === 'dark' ? 'text-slate-100' : 'text-slate-900'}`}>
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
@@ -83,23 +112,29 @@ const AdminDashboard: React.FC<{ user: User, lang: Language, theme: Theme }> = (
           <h1 className="text-3xl font-bold">{t.adminConsole}</h1>
           <p className={`${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'}`}>{t.tagline}</p>
         </div>
-        <div className={`flex p-1 rounded-lg border shadow-sm ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+        <div className={`flex p-1 rounded-lg border shadow-sm overflow-x-auto ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
           <button 
             onClick={() => setActiveTab('reports')}
-            className={`px-4 py-2 rounded-md transition-all text-sm font-semibold ${activeTab === 'reports' ? 'bg-emerald-600 text-white' : theme === 'dark' ? 'text-slate-400 hover:bg-slate-700' : 'text-slate-600 hover:bg-slate-50'}`}
+            className={`px-4 py-2 rounded-md transition-all text-sm font-semibold whitespace-nowrap ${activeTab === 'reports' ? 'bg-emerald-600 text-white' : theme === 'dark' ? 'text-slate-400 hover:bg-slate-700' : 'text-slate-600 hover:bg-slate-50'}`}
           >
             {t.totalReports}
           </button>
           <button 
+            onClick={() => setActiveTab('analytics')}
+            className={`px-4 py-2 rounded-md transition-all text-sm font-semibold whitespace-nowrap ${activeTab === 'analytics' ? 'bg-emerald-600 text-white' : theme === 'dark' ? 'text-slate-400 hover:bg-slate-700' : 'text-slate-600 hover:bg-slate-50'}`}
+          >
+            {t.analytics}
+          </button>
+          <button 
             onClick={() => setActiveTab('feedback')}
-            className={`px-4 py-2 rounded-md transition-all text-sm font-semibold ${activeTab === 'feedback' ? 'bg-emerald-600 text-white' : theme === 'dark' ? 'text-slate-400 hover:bg-slate-700' : 'text-slate-600 hover:bg-slate-50'}`}
+            className={`px-4 py-2 rounded-md transition-all text-sm font-semibold whitespace-nowrap ${activeTab === 'feedback' ? 'bg-emerald-600 text-white' : theme === 'dark' ? 'text-slate-400 hover:bg-slate-700' : 'text-slate-600 hover:bg-slate-50'}`}
           >
             {lang === 'EN' ? "Citizen Feedback" : "नागरिक प्रतिक्रिया"}
             {stats.flagged > 0 && <span className="ml-2 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">{stats.flagged}</span>}
           </button>
           <button 
             onClick={() => setActiveTab('users')}
-            className={`px-4 py-2 rounded-md transition-all text-sm font-semibold ${activeTab === 'users' ? 'bg-emerald-600 text-white' : theme === 'dark' ? 'text-slate-400 hover:bg-slate-700' : 'text-slate-600 hover:bg-slate-50'}`}
+            className={`px-4 py-2 rounded-md transition-all text-sm font-semibold whitespace-nowrap ${activeTab === 'users' ? 'bg-emerald-600 text-white' : theme === 'dark' ? 'text-slate-400 hover:bg-slate-700' : 'text-slate-600 hover:bg-slate-50'}`}
           >
             {lang === 'EN' ? "Manage Users" : "उपयोगकर्ता प्रबंधित करें"}
           </button>
@@ -203,6 +238,32 @@ const AdminDashboard: React.FC<{ user: User, lang: Language, theme: Theme }> = (
                 })}
               </tbody>
             </table>
+          </div>
+        </div>
+      ) : activeTab === 'analytics' ? (
+        <div className={`p-8 rounded-2xl border shadow-sm ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+          <div className="flex items-center gap-3 mb-8">
+            <BarChart3 className="text-emerald-500" size={24} />
+            <h3 className="text-xl font-bold">{t.dailyTrends}</h3>
+          </div>
+          
+          <div className="relative h-64 w-full flex items-end justify-between gap-4 mt-12 pb-8 border-b border-slate-700/50">
+            {analyticsData.map((d, i) => (
+              <div key={i} className="flex-1 flex flex-col items-center group relative h-full justify-end">
+                <div 
+                  className="w-full bg-emerald-500 rounded-t-lg transition-all duration-500 group-hover:bg-emerald-400 relative"
+                  style={{ height: `${(d.weight / maxWeight) * 100}%` }}
+                >
+                  <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                    {d.weight} kg
+                  </div>
+                </div>
+                <span className="text-[10px] font-bold text-slate-500 mt-4 absolute -bottom-6">{d.date}</span>
+              </div>
+            ))}
+          </div>
+          <div className="mt-12 text-center text-sm text-slate-500">
+            {t.collectionData} ({lang === 'EN' ? 'Last 7 Days' : 'पिछले 7 दिन'})
           </div>
         </div>
       ) : activeTab === 'feedback' ? (
