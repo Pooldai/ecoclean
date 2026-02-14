@@ -1,4 +1,3 @@
-
 export enum UserRole {
   ADMIN = 'ADMIN',
   CITIZEN = 'CITIZEN',
@@ -11,6 +10,9 @@ export enum ReportStatus {
   COMPLETED = 'COMPLETED',
   REJECTED = 'REJECTED'
 }
+
+export type Language = 'EN' | 'HI';
+export type Theme = 'light' | 'dark';
 
 export interface User {
   id: string;

@@ -1,24 +1,26 @@
-
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { DB } from '../db';
-import { User } from '../types';
+import { User, Language, Theme } from '../types';
 import { Recycle, LogIn, Mail, Lock } from 'lucide-react';
+import { useTranslation } from '../translations';
 
 interface LoginProps {
   onLogin: (user: User) => void;
+  lang: Language;
+  theme: Theme;
 }
 
-const Login: React.FC<LoginProps> = ({ onLogin }) => {
+const Login: React.FC<LoginProps> = ({ onLogin, lang, theme }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const t = useTranslation(lang);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const users = DB.getUsers();
-    // Simplified auth for MVP: find user by email
     const user = users.find(u => u.email === email);
     
     if (user) {
@@ -26,19 +28,19 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       onLogin(user);
       navigate('/');
     } else {
-      setError('Invalid email or password. Hint: admin@ecoclean.com is pre-created.');
+      setError(lang === 'EN' ? 'Invalid email or password.' : 'अमान्य ईमेल या पासवर्ड।');
     }
   };
 
   return (
-    <div className="min-h-[calc(100vh-100px)] flex items-center justify-center px-4 bg-gradient-to-br from-emerald-50 to-slate-100">
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 border border-slate-100">
+    <div className={`min-h-[calc(100vh-128px)] flex items-center justify-center px-4 ${theme === 'dark' ? 'bg-slate-900' : 'bg-gradient-to-br from-emerald-50 to-slate-100'}`}>
+      <div className={`max-w-md w-full rounded-2xl shadow-xl p-8 border ${theme === 'dark' ? 'bg-slate-800 border-slate-700 text-white' : 'bg-white border-slate-100'}`}>
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center p-3 bg-emerald-100 rounded-xl mb-4 text-emerald-600">
+          <div className={`inline-flex items-center justify-center p-3 rounded-xl mb-4 ${theme === 'dark' ? 'bg-emerald-900/30 text-emerald-400' : 'bg-emerald-100 text-emerald-600'}`}>
             <Recycle size={40} />
           </div>
-          <h2 className="text-3xl font-bold text-slate-800">Welcome Back</h2>
-          <p className="text-slate-500 mt-2 text-sm md:text-base">Login to manage waste and keep your city clean.</p>
+          <h2 className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-slate-800'}`}>{t.welcomeBack}</h2>
+          <p className={`${theme === 'dark' ? 'text-slate-400' : 'text-slate-500'} mt-2 text-sm md:text-base`}>{t.tagline}</p>
         </div>
 
         {error && (
@@ -49,13 +51,13 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
+            <label className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>{t.email}</label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               <input
                 type="email"
                 required
-                className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
+                className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none transition-all ${theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-slate-200 text-slate-900'}`}
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -64,13 +66,13 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+            <label className={`block text-sm font-medium mb-1 ${theme === 'dark' ? 'text-slate-300' : 'text-slate-700'}`}>{t.password}</label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               <input
                 type="password"
                 required
-                className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all"
+                className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none transition-all ${theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-slate-200 text-slate-900'}`}
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -83,14 +85,14 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2 transition-colors"
           >
             <LogIn size={20} />
-            Login
+            {t.login}
           </button>
         </form>
 
-        <p className="text-center mt-6 text-slate-600">
-          Don't have an account?{' '}
-          <Link to="/signup" className="text-emerald-600 font-semibold hover:underline">
-            Sign Up
+        <p className={`text-center mt-6 ${theme === 'dark' ? 'text-slate-400' : 'text-slate-600'}`}>
+          {lang === 'EN' ? "Don't have an account?" : "खाता नहीं है?"}{' '}
+          <Link to="/signup" className="text-emerald-500 font-semibold hover:underline">
+            {t.signup}
           </Link>
         </p>
       </div>
