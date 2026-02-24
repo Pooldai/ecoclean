@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { DB } from '../db';
@@ -19,11 +20,13 @@ const Signup: React.FC<SignupProps> = ({ onSignup, lang, theme }) => {
     phone: '',
     password: ''
   });
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const t = useTranslation(lang);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
     
     const newUser: User = {
       id: `u-${Date.now()}`,
@@ -34,10 +37,17 @@ const Signup: React.FC<SignupProps> = ({ onSignup, lang, theme }) => {
       createdAt: Date.now()
     };
 
-    DB.saveUser(newUser);
-    DB.setSession(newUser);
-    onSignup(newUser);
-    navigate('/');
+    try {
+      await DB.saveUser(newUser);
+      DB.setSession(newUser);
+      onSignup(newUser);
+      navigate('/');
+    } catch (err: any) {
+      console.error("Signup error:", err);
+      alert(`Error creating account: ${err.message || "Unknown error"}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -141,10 +151,11 @@ const Signup: React.FC<SignupProps> = ({ onSignup, lang, theme }) => {
 
           <button
             type="submit"
-            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2 transition-colors mt-6"
+            disabled={loading}
+            className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-500 text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2 transition-colors mt-6"
           >
             <UserPlus size={20} />
-            {t.signup}
+            {loading ? "Creating Account..." : t.signup}
           </button>
         </form>
 

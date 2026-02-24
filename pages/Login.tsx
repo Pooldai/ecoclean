@@ -1,7 +1,8 @@
+
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { DB } from '../db';
-import { User, Language, Theme } from '../types';
+import { User, UserRole, Language, Theme } from '../types';
 import { Recycle, LogIn, Mail, Lock } from 'lucide-react';
 import { useTranslation } from '../translations';
 
@@ -15,20 +16,54 @@ const Login: React.FC<LoginProps> = ({ onLogin, lang, theme }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const t = useTranslation(lang);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const users = DB.getUsers();
-    const user = users.find(u => u.email === email);
-    
-    if (user) {
-      DB.setSession(user);
-      onLogin(user);
-      navigate('/');
-    } else {
-      setError(lang === 'EN' ? 'Invalid email or password.' : 'अमान्य ईमेल या पासवर्ड।');
+    setLoading(true);
+    try {
+      // Admin Bypass / Fix as requested
+      if (email === 'admin@ecoclean.com' && password === 'Ecoclean@123') {
+        const adminUser: User = {
+          id: 'admin-fixed-id',
+          email: 'admin@ecoclean.com',
+          name: 'System Admin',
+          role: UserRole.ADMIN,
+          createdAt: 1708771200000 // Fixed timestamp
+        };
+        
+        // Ensure admin exists in Supabase profiles for relational integrity
+        try {
+          const existing = await DB.getUserByEmail(email);
+          if (!existing) {
+            await DB.saveUser(adminUser);
+          }
+        } catch (dbErr) {
+          console.warn("Admin auto-provisioning failed, but logging in anyway:", dbErr);
+        }
+
+        DB.setSession(adminUser);
+        onLogin(adminUser);
+        navigate('/');
+        return;
+      }
+
+      const user = await DB.getUserByEmail(email);
+      
+      if (user) {
+        DB.setSession(user);
+        onLogin(user);
+        navigate('/');
+      } else {
+        setError(lang === 'EN' ? 'Invalid email or password. Please check if your account exists.' : 'अमान्य ईमेल या पासवर्ड। कृपया जांचें कि क्या आपका खाता मौजूद है।');
+      }
+    } catch (err: any) {
+      console.error("Login error:", err);
+      setError(err.message || "Connection error. Please check your database settings.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -82,10 +117,11 @@ const Login: React.FC<LoginProps> = ({ onLogin, lang, theme }) => {
 
           <button
             type="submit"
-            className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2 transition-colors"
+            disabled={loading}
+            className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-500 text-white font-semibold py-3 rounded-lg flex items-center justify-center gap-2 transition-colors"
           >
             <LogIn size={20} />
-            {t.login}
+            {loading ? "Logging in..." : t.login}
           </button>
         </form>
 

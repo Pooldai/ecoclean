@@ -1,94 +1,128 @@
-import { User, WasteReport, UserRole, ReportStatus, Feedback } from './types';
 
-const STORAGE_KEYS = {
-  USERS: 'ecoclean_users',
-  REPORTS: 'ecoclean_reports',
-  FEEDBACK: 'ecoclean_feedback',
-  SESSION: 'ecoclean_session'
-};
-
-// Initial Data
-const DEFAULT_ADMIN: User = {
-  id: 'admin-1',
-  email: 'admin@ecoclean.com',
-  name: 'System Admin',
-  role: UserRole.ADMIN,
-  createdAt: Date.now()
-};
+import { User, WasteReport, Feedback } from './types';
+import { supabase } from './supabaseClient';
 
 export const DB = {
-  getUsers: (): User[] => {
-    const data = localStorage.getItem(STORAGE_KEYS.USERS);
-    const users = data ? JSON.parse(data) : [];
-    if (users.length === 0) {
-      localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify([DEFAULT_ADMIN]));
-      return [DEFAULT_ADMIN];
+  // --- USERS ---
+  getUsers: async (): Promise<User[]> => {
+    const { data, error } = await supabase.from('profiles').select('*');
+    if (error) throw error;
+    return data || [];
+  },
+
+  getUserByEmail: async (email: string): Promise<User | null> => {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('email', email)
+      .single();
+    
+    if (error && error.code !== 'PGRST116') {
+      console.error("Supabase fetch error (getUserByEmail):", error);
+      throw error;
     }
-    return users;
+    return data;
   },
 
-  saveUser: (user: User) => {
-    const users = DB.getUsers();
-    users.push(user);
-    localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
-  },
-
-  updateUser: (updatedUser: User) => {
-    const users = DB.getUsers();
-    const index = users.findIndex(u => u.id === updatedUser.id);
-    if (index !== -1) {
-      users[index] = updatedUser;
-      localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
-      
-      // Update session if it's the current user
-      const session = DB.getSession();
-      if (session && session.id === updatedUser.id) {
-        DB.setSession(updatedUser);
-      }
+  saveUser: async (user: User) => {
+    const { error } = await supabase.from('profiles').insert([user]);
+    if (error) {
+      console.error("Supabase insert error (profiles):", error);
+      throw error;
     }
   },
 
-  getReports: (): WasteReport[] => {
-    const data = localStorage.getItem(STORAGE_KEYS.REPORTS);
-    return data ? JSON.parse(data) : [];
-  },
-
-  saveReport: (report: WasteReport) => {
-    const reports = DB.getReports();
-    reports.push(report);
-    localStorage.setItem(STORAGE_KEYS.REPORTS, JSON.stringify(reports));
-  },
-
-  updateReport: (updatedReport: WasteReport) => {
-    const reports = DB.getReports();
-    const index = reports.findIndex(r => r.id === updatedReport.id);
-    if (index !== -1) {
-      reports[index] = updatedReport;
-      localStorage.setItem(STORAGE_KEYS.REPORTS, JSON.stringify(reports));
+  updateUser: async (updatedUser: User) => {
+    const { error } = await supabase.from('profiles').update(updatedUser).eq('id', updatedUser.id);
+    if (error) throw error;
+    
+    // Update session locally if needed
+    const session = DB.getSession();
+    if (session && session.id === updatedUser.id) {
+      DB.setSession(updatedUser);
     }
   },
 
-  getFeedback: (): Feedback[] => {
-    const data = localStorage.getItem(STORAGE_KEYS.FEEDBACK);
-    return data ? JSON.parse(data) : [];
+  // --- REPORTS ---
+  getReports: async (): Promise<WasteReport[]> => {
+    const { data, error } = await supabase
+      .from('reports')
+      .select('*')
+      .order('createdAt', { ascending: false });
+    if (error) throw error;
+    return data || [];
   },
 
-  saveFeedback: (fb: Feedback) => {
-    const feedback = DB.getFeedback();
-    feedback.push(fb);
-    localStorage.setItem(STORAGE_KEYS.FEEDBACK, JSON.stringify(feedback));
+  getReportsByCitizenId: async (citizenId: string): Promise<WasteReport[]> => {
+    const { data, error } = await supabase
+      .from('reports')
+      .select('*')
+      .eq('citizenId', citizenId)
+      .order('createdAt', { ascending: false });
+    if (error) throw error;
+    return data || [];
   },
 
+  getReportsByPickerId: async (pickerId: string): Promise<WasteReport[]> => {
+    const { data, error } = await supabase
+      .from('reports')
+      .select('*')
+      .eq('assignedPickerId', pickerId)
+      .eq('status', 'ASSIGNED')
+      .order('createdAt', { ascending: false });
+    if (error) throw error;
+    return data || [];
+  },
+
+  getPendingReports: async (): Promise<WasteReport[]> => {
+    const { data, error } = await supabase
+      .from('reports')
+      .select('*')
+      .eq('status', 'PENDING')
+      .order('createdAt', { ascending: false });
+    if (error) throw error;
+    return data || [];
+  },
+
+  saveReport: async (report: WasteReport) => {
+    const { error } = await supabase.from('reports').insert([report]);
+    if (error) {
+      console.error("Supabase insert error (reports):", error);
+      throw error;
+    }
+  },
+
+  updateReport: async (updatedReport: WasteReport) => {
+    const { error } = await supabase.from('reports').update(updatedReport).eq('id', updatedReport.id);
+    if (error) throw error;
+  },
+
+  // --- FEEDBACK ---
+  getFeedback: async (): Promise<Feedback[]> => {
+    const { data, error } = await supabase
+      .from('feedback')
+      .select('*')
+      .order('createdAt', { ascending: false });
+    if (error) throw error;
+    return data || [];
+  },
+
+  saveFeedback: async (fb: Feedback) => {
+    const { error } = await supabase.from('feedback').insert([fb]);
+    if (error) throw error;
+  },
+
+  // --- SESSION (Temporary Frontend Helper) ---
   setSession: (user: User | null) => {
     if (user) {
-      localStorage.setItem(STORAGE_KEYS.SESSION, JSON.stringify(user));
+      localStorage.setItem('ecoclean_session', JSON.stringify(user));
     } else {
-      localStorage.removeItem(STORAGE_KEYS.SESSION);
+      localStorage.removeItem('ecoclean_session');
     }
   },
 
   getSession: (): User | null => {
-    const data = localStorage.getItem(STORAGE_KEYS.SESSION);
+    const data = localStorage.getItem('ecoclean_session');
     return data ? JSON.parse(data) : null;
   }
 };

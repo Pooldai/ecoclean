@@ -3,13 +3,16 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => {
   // Load env file based on `mode` in the current working directory.
-  // Using a type cast to any to resolve TS error when Node types aren't fully recognized in the config context.
+  // The third argument '' allows loading all variables regardless of VITE_ prefix.
+  // Fix: Property 'cwd' does not exist on type 'Process'. Casting to any for Node.js environment compatibility.
   const env = loadEnv(mode, (process as any).cwd(), '');
   
   return {
     plugins: [react()],
     define: {
-      'process.env.API_KEY': JSON.stringify(env.API_KEY || '')
+      'process.env.API_KEY': JSON.stringify(env.API_KEY || ''),
+      'process.env.VITE_SUPABASE_URL': JSON.stringify(env.VITE_SUPABASE_URL || env.SUPABASE_URL || ''),
+      'process.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(env.VITE_SUPABASE_ANON_KEY || env.SUPABASE_ANON_KEY || '')
     },
     build: {
       outDir: 'dist',
