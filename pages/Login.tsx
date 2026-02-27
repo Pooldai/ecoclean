@@ -60,8 +60,12 @@ const Login: React.FC<LoginProps> = ({ onLogin, lang, theme }) => {
         setError(lang === 'EN' ? 'Invalid email or password. Please check if your account exists.' : 'अमान्य ईमेल या पासवर्ड। कृपया जांचें कि क्या आपका खाता मौजूद है।');
       }
     } catch (err: any) {
-      console.error("Login error:", err);
-      setError(err.message || "Connection error. Please check your database settings.");
+      console.error("Login error details:", err);
+      let msg = err.message || "Unknown error";
+      if (msg.includes("Failed to fetch") || msg.includes("fetch")) {
+        msg = "Network Error: Could not connect to the database. Please check if your Supabase project is active (not paused) and your Vercel environment variables are set correctly.";
+      }
+      setError(msg);
     } finally {
       setLoading(false);
     }

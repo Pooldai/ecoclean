@@ -1,10 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Access variables safely. 
-// Vite's 'define' in vite.config.ts replaces these literal strings at build time.
-// We use fallbacks to ensure we always have strings to avoid immediate initialization crashes.
-const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://jhifxljmgtowbcdyqwmz.supabase.co';
-const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_x-NLsWyIBBLENwcYpqufgQ_VduOLfJo';
+// Access variables safely using Vite's environment variable system.
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://jhifxljmgtowbcdyqwmz.supabase.co';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'sb_publishable_x-NLsWyIBBLENwcYpqufgQ_VduOLfJo';
 
 const isConfigured = supabaseUrl && supabaseAnonKey && 
                      supabaseUrl.startsWith('http') && 

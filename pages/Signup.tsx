@@ -43,8 +43,12 @@ const Signup: React.FC<SignupProps> = ({ onSignup, lang, theme }) => {
       onSignup(newUser);
       navigate('/');
     } catch (err: any) {
-      console.error("Signup error:", err);
-      alert(`Error creating account: ${err.message || "Unknown error"}`);
+      console.error("Signup error details:", err);
+      let msg = err.message || "Unknown error";
+      if (msg.includes("Failed to fetch") || msg.includes("fetch")) {
+        msg = "Network Error: Could not connect to the database. Please check if your Supabase project is active (not paused) and your Vercel environment variables are set correctly.";
+      }
+      alert(`Error creating account: ${msg}`);
     } finally {
       setLoading(false);
     }
