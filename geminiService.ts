@@ -17,7 +17,7 @@ export const analyzeWasteImage = async (base64Image: string): Promise<string> =>
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-1.5-flash',
+      model: 'gemini-pro-vision',
       contents: {
         parts: [
           {
@@ -38,6 +38,6 @@ export const analyzeWasteImage = async (base64Image: string): Promise<string> =>
     return text || "No analysis available.";
   } catch (error: any) {
     console.error("Gemini analysis error:", error);
-    return `Analysis failed: ${error.message || "Unknown error"}. Please check your network connection.`;
+    return "Analysis failed. Please check your network connection.";
   }
 };
