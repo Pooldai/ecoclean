@@ -6,7 +6,7 @@ import { GoogleGenAI } from "@google/genai";
  */
 export const analyzeWasteImage = async (base64Image: string): Promise<string> => {
   const apiKey = (import.meta.env?.VITE_GEMINI_API_KEY as string) || (process.env as any).VITE_GEMINI_API_KEY;
-  
+
   if (!apiKey) {
     console.error("VITE_GEMINI_API_KEY is not defined");
     return "Analysis failed: API Key missing.";
@@ -37,7 +37,7 @@ export const analyzeWasteImage = async (base64Image: string): Promise<string> =>
     });
 
     const data = await response.json();
-    
+
     if (!response.ok) {
       throw new Error(data.error?.message || "API request failed");
     }

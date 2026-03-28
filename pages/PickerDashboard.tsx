@@ -143,8 +143,14 @@ const PickerDashboard: React.FC<{ user: User, lang: Language, theme: Theme }> = 
                   </div>
                   <div className="flex-grow">
                     <h3 className="font-bold text-lg flex items-center gap-2"><MapPin size={18} /> {task.location.address}</h3>
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      <button onClick={() => {setSelectedTask(task); setIsCompleting(true);}} className="py-2 px-6 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-bold flex items-center justify-center gap-2">
+                    <div className="mt-4 flex flex-col gap-2">
+                      <button 
+                        onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(task.location.address)}`, '_blank')}
+                        className="py-2 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold flex items-center justify-center gap-2 shadow-sm transition-all active:scale-95"
+                      >
+                        <Navigation size={16} /> {t.navigate}
+                      </button>
+                      <button onClick={() => {setSelectedTask(task); setIsCompleting(true);}} className="py-2 px-6 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-bold flex items-center justify-center gap-2 shadow-sm transition-all active:scale-95">
                         <CheckCircle size={16} /> {t.markComplete}
                       </button>
                     </div>
