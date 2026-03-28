@@ -36,8 +36,8 @@ export const analyzeWasteImage = async (base64Image: string): Promise<string> =>
     const text = response.text;
     if (text && text.includes('NOT_GARBAGE')) return 'NOT_GARBAGE';
     return text || "No analysis available.";
-  } catch (error) {
+  } catch (error: any) {
     console.error("Gemini analysis error:", error);
-    return "Analysis failed. Please check your network connection.";
+    return `Analysis failed: ${error.message || "Unknown error"}. Please check your network connection.`;
   }
 };
