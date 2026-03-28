@@ -1,12 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { DB } from '../db';
-import { WasteReport, User, ReportStatus, Language, Theme } from '../types';
-import { MapPin, CheckCircle, Camera, Navigation, User as UserIcon, X, Mail, Phone, Save, CheckCircle2 } from 'lucide-react';
+import { WasteReport, User, ReportStatus, Language, Theme, Feedback } from '../types';
+import { MapPin, CheckCircle, Camera, Navigation, User as UserIcon, X, Mail, Phone, Save, CheckCircle2, Star } from 'lucide-react';
 import { useTranslation } from '../translations';
 
 const PickerDashboard: React.FC<{ user: User, lang: Language, theme: Theme }> = ({ user, lang, theme }) => {
   const [tasks, setTasks] = useState<WasteReport[]>([]);
+  const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
   const [selectedTask, setSelectedTask] = useState<WasteReport | null>(null);
   const [isCompleting, setIsCompleting] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -16,7 +17,8 @@ const PickerDashboard: React.FC<{ user: User, lang: Language, theme: Theme }> = 
   const [profileData, setProfileData] = useState({
     name: user.name,
     email: user.email,
-    phone: user.phone || ''
+    phone: user.phone || '',
+    profilePictureUrl: user.profilePictureUrl || ''
   });
   const [updateSuccess, setUpdateSuccess] = useState(false);
   const t = useTranslation(lang);
@@ -32,6 +34,8 @@ const PickerDashboard: React.FC<{ user: User, lang: Language, theme: Theme }> = 
     try {
       const pickerTasks = await DB.getReportsByPickerId(user.id);
       setTasks(pickerTasks);
+      const allFeedbacks = await DB.getFeedback();
+      setFeedbacks(allFeedbacks.filter(f => f.pickerId === user.id));
     } catch (err) {
       console.error(err);
     } finally {
@@ -69,7 +73,8 @@ const PickerDashboard: React.FC<{ user: User, lang: Language, theme: Theme }> = 
       ...user,
       name: profileData.name,
       email: profileData.email,
-      phone: profileData.phone
+      phone: profileData.phone,
+      profilePictureUrl: profileData.profilePictureUrl
     };
     try {
       await DB.updateUser(updatedUser);
@@ -86,6 +91,17 @@ const PickerDashboard: React.FC<{ user: User, lang: Language, theme: Theme }> = 
       const reader = new FileReader();
       reader.onloadend = () => {
         setProofImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleProfileImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfileData({ ...profileData, profilePictureUrl: reader.result as string });
       };
       reader.readAsDataURL(file);
     }
@@ -141,13 +157,34 @@ const PickerDashboard: React.FC<{ user: User, lang: Language, theme: Theme }> = 
       ) : (
         <div className={`max-w-2xl mx-auto p-8 rounded-2xl border shadow-sm ${theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
           <form onSubmit={handleUpdateProfile} className="space-y-6">
+            <div className="flex flex-col items-center mb-6">
+              <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-emerald-500 mb-4 bg-slate-100 flex items-center justify-center dark:bg-slate-700">
+                {profileData.profilePictureUrl ? (
+                  <img src={profileData.profilePictureUrl} alt="Profile" className="w-full h-full object-cover" />
+                ) : (
+                  <UserIcon size={40} className="text-slate-400" />
+                )}
+              </div>
+              <div className="flex items-center gap-1.5 mb-4 text-amber-600 bg-amber-50 dark:bg-amber-900/20 px-4 py-1.5 rounded-full text-sm font-bold border border-amber-200 dark:border-amber-800 shadow-sm">
+                <Star size={16} className="fill-amber-500" />
+                {feedbacks.length > 0 ? (feedbacks.reduce((s,f) => s+f.rating, 0) / feedbacks.length).toFixed(1) : 'No ratings'} ({feedbacks.length} reviews)
+              </div>
+              <label className="cursor-pointer text-sm text-emerald-600 font-semibold hover:text-emerald-700 px-3 py-1 border border-emerald-200 rounded-full dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/10">
+                {lang === 'EN' ? 'Change Photo' : 'फ़ोटो बदलें'}
+                <input type="file" accept="image/*" className="hidden" onChange={handleProfileImage} />
+              </label>
+            </div>
             <div>
               <label className="block text-sm font-bold mb-2">{t.name}</label>
               <input type="text" required className="w-full p-3 border rounded-xl dark:bg-slate-700 dark:border-slate-600" value={profileData.name} onChange={(e) => setProfileData({...profileData, name: e.target.value})} />
             </div>
             <div>
               <label className="block text-sm font-bold mb-2">{t.email}</label>
-              <input type="email" required className="w-full p-3 border rounded-xl dark:bg-slate-700 dark:border-slate-600" value={profileData.email} onChange={(e) => setProfileData({...profileData, email: e.target.value})} />
+              <input type="email" required disabled title="Email cannot be changed" className="w-full p-3 border rounded-xl bg-slate-50 text-slate-500 cursor-not-allowed dark:bg-slate-800 dark:border-slate-700" value={profileData.email} onChange={(e) => setProfileData({...profileData, email: e.target.value})} />
+            </div>
+            <div>
+              <label className="block text-sm font-bold mb-2">{lang === 'EN' ? 'Phone Number' : 'फ़ोन नंबर'}</label>
+              <input type="tel" className="w-full p-3 border rounded-xl dark:bg-slate-700 dark:border-slate-600" value={profileData.phone} onChange={(e) => setProfileData({...profileData, phone: e.target.value})} />
             </div>
             <button type="submit" className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg">
               <Save size={20} className="inline mr-2" /> {t.saveChanges}

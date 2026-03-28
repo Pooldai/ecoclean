@@ -21,6 +21,7 @@ export interface User {
   role: UserRole;
   phone?: string;
   address?: string;
+  profilePictureUrl?: string;
   createdAt: number;
 }
 
@@ -48,6 +49,7 @@ export interface WasteReport {
 export interface Feedback {
   id: string;
   reportId: string;
+  pickerId: string;
   userId: string;
   userName: string;
   rating: number;

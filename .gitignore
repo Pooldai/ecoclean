@@ -1,0 +1,25 @@
+# Logs
+node_modules
+dist
+dist-ssr
+*.local
+
+# Supabase
+.supabase
+
+# Environment
+.env
+.env.*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode
+.idea
+*.swp
+*.swo
+
+# Build
+build/

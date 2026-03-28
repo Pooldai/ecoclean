@@ -1,0 +1,6 @@
+@echo off
+echo Installing dependencies...
+call npm install
+echo Starting EcoClean...
+start http://localhost:5173
+npm run dev

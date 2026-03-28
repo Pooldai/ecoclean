@@ -10,6 +10,7 @@ CREATE TABLE profiles (
   role TEXT NOT NULL,
   phone TEXT,
   address TEXT,
+  "profilePictureUrl" TEXT,
   "createdAt" BIGINT NOT NULL
 );
 
@@ -35,6 +36,7 @@ CREATE TABLE reports (
 CREATE TABLE feedback (
   id TEXT PRIMARY KEY,
   "reportId" TEXT REFERENCES reports(id),
+  "pickerId" TEXT REFERENCES profiles(id),
   "userId" TEXT REFERENCES profiles(id),
   "userName" TEXT NOT NULL,
   rating INTEGER NOT NULL,
