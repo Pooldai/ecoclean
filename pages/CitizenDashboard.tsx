@@ -60,12 +60,19 @@ const CitizenDashboard: React.FC<{ user: User, lang: Language, theme: Theme }> =
         setIsAnalyzing(true);
         try {
           const analysis = await analyzeWasteImage(base64);
-          setNewReport(prev => ({ 
-            ...prev, 
-            description: prev.description 
-              ? `${prev.description}\n\n[AI Analysis]: ${analysis}` 
-              : `[AI Analysis]: ${analysis}` 
-          }));
+          if (analysis === 'NOT_GARBAGE') {
+            setNewReport(prev => ({ 
+              ...prev, 
+              description: 'NOT_GARBAGE' 
+            }));
+          } else {
+            setNewReport(prev => ({ 
+              ...prev, 
+              description: prev.description 
+                ? `${prev.description}\n\n[AI Analysis]: ${analysis}` 
+                : `[AI Analysis]: ${analysis}` 
+            }));
+          }
         } catch (err) {
           console.error("Image analysis failed:", err);
         } finally {
@@ -404,7 +411,14 @@ const CitizenDashboard: React.FC<{ user: User, lang: Language, theme: Theme }> =
                         {t.analyzing}
                       </div>
                     )}
-                    <button type="button" onClick={() => setNewReport({...newReport, photo: ''})} className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full"><X size={16} /></button>
+                    {!isAnalyzing && newReport.description === 'NOT_GARBAGE' && (
+                      <div className="absolute inset-0 bg-red-500/80 flex flex-col items-center justify-center text-white text-center p-4">
+                        <AlertCircle className="mb-2" size={32} />
+                        <p className="font-bold">{lang === 'EN' ? 'No Garbage Detected' : 'कोई कचरा नहीं मिला'}</p>
+                        <p className="text-xs mt-1">{lang === 'EN' ? 'Please upload a photo of actual litter or waste.' : 'कृपया वास्तविक कचरे या कूड़े की फोटो अपलोड करें।'}</p>
+                      </div>
+                    )}
+                    <button type="button" onClick={() => setNewReport({...newReport, photo: '', description: ''})} className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full transition-transform active:scale-90"><X size={16} /></button>
                   </div>
                 )}
               </div>
@@ -424,8 +438,8 @@ const CitizenDashboard: React.FC<{ user: User, lang: Language, theme: Theme }> =
               ></textarea>
               <button
                 type="submit"
-                disabled={!newReport.photo || isAnalyzing}
-                className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-600 text-white font-semibold py-3 rounded-xl transition-all shadow-lg"
+                disabled={!newReport.photo || isAnalyzing || newReport.description === 'NOT_GARBAGE'}
+                className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-600 text-white font-semibold py-3 rounded-xl transition-all shadow-lg active:scale-95"
               >
                 {t.submit}
               </button>

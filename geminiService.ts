@@ -5,12 +5,18 @@ import { GoogleGenAI } from "@google/genai";
  * Always initializes a new instance before use as per guidelines for reliable API key access.
  */
 export const analyzeWasteImage = async (base64Image: string): Promise<string> => {
-  // Always use the named parameter and process.env.API_KEY directly as per guidelines
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  // Use import.meta.env for Vite environment variables
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  if (!apiKey) {
+    console.error("VITE_GEMINI_API_KEY is not defined");
+    return "Analysis failed: API Key missing.";
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
+      model: 'gemini-1.5-flash',
       contents: {
         parts: [
           {
@@ -20,14 +26,15 @@ export const analyzeWasteImage = async (base64Image: string): Promise<string> =>
             }
           },
           {
-            text: "Identify the type of waste in this image (e.g., plastic, organic, construction, e-waste) and estimate the volume (small pile, large overflow, etc.). Suggest a priority level (Low, Medium, High). Keep it very brief, under 30 words."
+            text: "Does this image contain litter, trash, or garbage in a public space? If NO, respond ONLY with the exact word 'NOT_GARBAGE'. If YES, briefly identify the type of waste, volume (e.g., small pile), and priority (Low, Medium, High). Keep the description under 20 words."
           }
         ]
       }
     });
     
-    // Access the .text property directly (not a method) as per SDK requirements
-    return response.text || "No analysis available.";
+    const text = response.text;
+    if (text && text.includes('NOT_GARBAGE')) return 'NOT_GARBAGE';
+    return text || "No analysis available.";
   } catch (error) {
     console.error("Gemini analysis error:", error);
     return "Analysis failed. Please check your network connection.";

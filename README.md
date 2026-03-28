@@ -1,51 +1,23 @@
 # 🌿 EcoClean Waste Management Platform
 
-Welcome to the EcoClean local setup guide. Follow these simple steps to get the application running on your computer.
+Welcome to EcoClean, a modern platform for sustainable waste management.
 
-## 📋 Prerequisites
+## 🚀 Getting Started
 
-Before you begin, ensure you have the following installed:
-1. **Node.js**: [Download and install Node.js (LTS version)](https://nodejs.org/)
-2. **A Web Browser**: Google Chrome, Firefox, or Microsoft Edge.
+If you are a developer or client setting up this project for the first time, please refer to the **[HANDOVER.md](./HANDOVER.md)** file for a step-by-step setup guide.
 
----
+### Quick Setup:
+1. `npm install`
+2. Create `.env` from `.env.example`
+3. Run `npm run dev`
 
-## 🚀 Quick Start Instructions
+## 🛠️ Features
+- **Admin Dashboard**: Analytics, Report Assignment, and Picker Management.
+- **Citizen Dashboard**: Report waste with photo and location tracking.
+- **Garbage Picker**: Manage assigned tasks and verify completion.
 
-### Step 1: Open Terminal
-Open your terminal (Command Prompt or PowerShell on Windows).
+## 📄 Documentation
+- [HANDOVER.md](./HANDOVER.md): Full setup and handover details.
+- [SCHEMA.sql](./SCHEMA.sql): Database schema for Supabase.
 
-### Step 2: Navigate to the Project
-You must be in the folder that contains the `package.json` file. 
-Run this command:
-```bash
-cd ecoclean-main
-```
-*Note: If you are already inside the folder, you can skip this step.*
-
-### Step 3: Install Dependencies
-Run:
-```bash
-npm install
-```
-
-### Step 4: Configure the AI
-1. Create a file named `.env` in the project folder.
-2. Add your API key: `API_KEY=your_key_here`
-
-### Step 5: Start the Application
-Run:
-```bash
-npm run dev
-```
-
----
-
-## 🛠️ Troubleshooting "ENOENT" Error
-If you see an error saying `ENOENT: no such file or directory, open 'package.json'`, it means your terminal is in the wrong folder. 
-
-**The Solution:**
-Type `ls` (on Mac/Linux) or `dir` (on Windows). If you see a folder named `ecoclean-main` in the list, type `cd ecoclean-main` and then try `npm install` again.
-
----
-*Developed for EcoClean Waste Management Solutions.*
+*Developed with 💚 for a cleaner tomorrow.*
