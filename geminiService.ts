@@ -5,39 +5,48 @@ import { GoogleGenAI } from "@google/genai";
  * Always initializes a new instance before use as per guidelines for reliable API key access.
  */
 export const analyzeWasteImage = async (base64Image: string): Promise<string> => {
-  // Use import.meta.env or process.env fallback for Vite compatibility
   const apiKey = (import.meta.env?.VITE_GEMINI_API_KEY as string) || (process.env as any).VITE_GEMINI_API_KEY;
   
   if (!apiKey) {
-    console.error("VITE_GEMINI_API_KEY is not defined in env");
+    console.error("VITE_GEMINI_API_KEY is not defined");
     return "Analysis failed: API Key missing.";
   }
 
-  const ai = new GoogleGenAI({ apiKey });
+  // Use direct fetch to bypass SDK issues
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
   try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-pro-vision',
-      contents: {
-        parts: [
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [
           {
-            inlineData: {
-              mimeType: 'image/jpeg',
-              data: base64Image.split(',')[1] || base64Image
-            }
+            parts: [
+              { text: "Does this image contain litter, trash, or garbage in a public space? If NO, respond ONLY with the exact word 'NOT_GARBAGE'. If YES, briefly identify the type of waste, volume (e.g., small pile), and priority (Low, Medium, High). Keep the description under 20 words." },
+              {
+                inline_data: {
+                  mime_type: "image/jpeg",
+                  data: base64Image.split(",")[1] || base64Image,
+                },
+              },
+            ],
           },
-          {
-            text: "Does this image contain litter, trash, or garbage in a public space? If NO, respond ONLY with the exact word 'NOT_GARBAGE'. If YES, briefly identify the type of waste, volume (e.g., small pile), and priority (Low, Medium, High). Keep the description under 20 words."
-          }
-        ]
-      }
+        ],
+      }),
     });
+
+    const data = await response.json();
     
-    const text = response.text;
-    if (text && text.includes('NOT_GARBAGE')) return 'NOT_GARBAGE';
+    if (!response.ok) {
+      throw new Error(data.error?.message || "API request failed");
+    }
+
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (text && text.includes("NOT_GARBAGE")) return "NOT_GARBAGE";
     return text || "No analysis available.";
   } catch (error: any) {
-    console.error("Gemini analysis error:", error);
-    return "Analysis failed. Please check your network connection.";
+    console.error("Gemini fetch error:", error);
+    return `Analysis failed: ${error.message || "Unknown error"}. Please check your network connection.`;
   }
 };
