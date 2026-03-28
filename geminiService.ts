@@ -5,10 +5,11 @@ import { GoogleGenAI } from "@google/genai";
  * Always initializes a new instance before use as per guidelines for reliable API key access.
  */
 export const analyzeWasteImage = async (base64Image: string): Promise<string> => {
-  // Use import.meta.env for Vite environment variables
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  // Use import.meta.env or process.env fallback for Vite compatibility
+  const apiKey = (import.meta.env?.VITE_GEMINI_API_KEY as string) || (process.env as any).VITE_GEMINI_API_KEY;
+  
   if (!apiKey) {
-    console.error("VITE_GEMINI_API_KEY is not defined");
+    console.error("VITE_GEMINI_API_KEY is not defined in env");
     return "Analysis failed: API Key missing.";
   }
 
