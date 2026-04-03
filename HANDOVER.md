@@ -27,7 +27,6 @@ npm install
 3. Replace the values with your actual keys from Supabase:
    - **VITE_SUPABASE_URL**: Found in Project Settings > API.
    - **VITE_SUPABASE_ANON_KEY**: Found in Project Settings > API (anon public).
-   - **API_KEY**: Your Google Gemini API Key for AI features.
 
 ### Step 4: Run the Application
 Start the development server:
